@@ -1,0 +1,13 @@
+﻿# tpi-so-2026
+
+## Descripción
+
+Simulador de procesos para la materia sistemas operativos desarrollado en Python por el Grupo 2, turno noche.
+
+## Integrantes
+
+1. Brutti, Romina Mónica.
+2. Benchat Parra, Lucas Ivan.
+3. Ortiz, Benito de Jesús.
+4. Ruiz Diaz, Dario Nahuel.
+5. Ramirez, Lautaro Ivan.
