@@ -165,7 +165,7 @@ def asignar_procesos_cpu():
         current_proceso = listaEjecutando[0]
         buscar_proceso_menor_tiempo_irrupcion()
 
-        if listaListos[0].tiempo_irrupcion < current_proceso.tiempo_restante:
+        if listaListos[0].tiempo_restante < current_proceso.tiempo_restante:
             
             listaListos.append(current_proceso)
             listaEjecutando[0] = listaListos.pop(0) 
@@ -209,32 +209,87 @@ def mostrar_listas():
 
 def mostrar_particiones():
 
-    print("\n" + "=" * 65)
+    print("\n" + "=" * 80)
     print("ESTADO DE LA MEMORIA")
-    print("=" * 65)
+    print("=" * 80)
 
-    print(f"{'ID':<8}{'Tamaño':<12}{'Estado':<15}{'Proceso':<12}")
-    print("-" * 65)
+    print(f"{'ID':<8}{'Tamaño':<12}{'Estado':<15}{'Proceso':<12}{'Frag. interna':<15}")
+    print("-" * 80)
+
+    fragmentacion_total = 0
 
     for particion in listaParticiones:
 
         if particion.proceso_asignado is not None:
             proceso = f"P{particion.proceso_asignado.id}"
+
+            fragmentacion = (
+                particion.tamanio - particion.proceso_asignado.tamanio
+            )
+
+            fragmentacion_total += fragmentacion
+
         else:
             proceso = "-"
+            fragmentacion = "-"
 
         print(f"{particion.id:<8}"
               f"{particion.tamanio:<12}"
               f"{particion.estado:<15}"
-              f"{proceso:<12}")
+              f"{proceso:<12}"
+              f"{fragmentacion:<15}")
 
-    print("=" * 65)
+    print("-" * 80)
+    print(f"Fragmentación interna total: {fragmentacion_total}")
+    print("=" * 80)
+
+def mostrar_informe_final():
+
+    print("\n" + "=" * 75)
+    print("             INFORME ESTADÍSTICO FINAL")
+    print("=" * 75)
+
+    print(f"{'Proceso':<12}{'Arribo':<12}{'Finalización':<15}"
+          f"{'Retorno':<12}{'Espera':<12}")
+
+    print("-" * 75)
+
+    sumaTiempoEspera = 0
+    sumaTiempoRetorno = 0
+
+    for proceso in sorted(listaTerminados, key=lambda p: p.id):
+
+        print(f"P{proceso.id:<11}"
+              f"{proceso.tiempo_arribo:<12}"
+              f"{proceso.tiempo_finalizacion:<15}"
+              f"{proceso.tiempo_retorno:<12}"
+              f"{proceso.tiempo_espera:<12}")
+
+        sumaTiempoEspera += proceso.tiempo_espera
+        sumaTiempoRetorno += proceso.tiempo_retorno
+
+    cantidadTerminados = len(listaTerminados)
+
+    if cantidadTerminados > 0:
+
+        promedioEspera = sumaTiempoEspera / cantidadTerminados
+        promedioRetorno = sumaTiempoRetorno / cantidadTerminados
+
+        rendimiento = cantidadTerminados / tiempo if tiempo > 0 else 0
+
+        print("-" * 75)
+        print(f"Tiempo de espera promedio: {promedioEspera:.2f}")
+        print(f"Tiempo de retorno promedio: {promedioRetorno:.2f}")
+        print(f"Rendimiento del sistema: {rendimiento:.2f} procesos/unidad de tiempo")
+
+    else:
+        print("No hay procesos terminados para calcular estadísticas.")
+
+    print("=" * 75)    
 
 
 
 #Carga de procesos desde un archivo CSV
-
-
 
 with open('procesos.csv', 'r', encoding='utf-8', newline='') as archivo_csv:
 
@@ -315,6 +370,16 @@ while len(listaListos) > 0 or len(listaNuevos) > 0 or len(listaEjecutando) > 0 o
 
         if proceso.tiempo_restante <= 0:
             proceso.tiempo_finalizacion = tiempo + 1
+
+            # Calcular tiempos del proceso
+            proceso.tiempo_retorno = (
+                proceso.tiempo_finalizacion - proceso.tiempo_arribo
+            )
+
+            proceso.tiempo_espera = (
+                proceso.tiempo_retorno - proceso.tiempo_irrupcion
+            )
+
             listaTerminados.append(proceso)
             listaEjecutando.remove(proceso)
 
@@ -363,3 +428,5 @@ while len(listaListos) > 0 or len(listaNuevos) > 0 or len(listaEjecutando) > 0 o
     huboCambios = False
 
     input("\nPresioná ENTER para continuar...")
+    
+mostrar_informe_final()
