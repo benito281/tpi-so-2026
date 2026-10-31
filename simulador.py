@@ -207,25 +207,29 @@ def mostrar_listas():
     print("\n" + "=" * 60)
 
 
-
 def mostrar_particiones():
 
-    print("\nPARTICIONES:")
+    print("\n" + "=" * 65)
+    print("ESTADO DE LA MEMORIA")
+    print("=" * 65)
+
+    print(f"{'ID':<8}{'Tamaño':<12}{'Estado':<15}{'Proceso':<12}")
+    print("-" * 65)
 
     for particion in listaParticiones:
 
         if particion.proceso_asignado is not None:
-            proceso = particion.proceso_asignado.id
-
+            proceso = f"P{particion.proceso_asignado.id}"
         else:
             proceso = "-"
 
+        print(f"{particion.id:<8}"
+              f"{particion.tamanio:<12}"
+              f"{particion.estado:<15}"
+              f"{proceso:<12}")
 
+    print("=" * 65)
 
-        print(f"Partición {particion.id} | "
-              f"Tamaño: {particion.tamanio} | "
-              f"Estado: {particion.estado} | "
-              f"Proceso: {proceso}")
 
 
 #Carga de procesos desde un archivo CSV
