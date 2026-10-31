@@ -60,16 +60,8 @@ def recorrer_lista_particiones_bestFit(listaAuxiliar):
                 if mejor_particion is None or particion.tamanio < mejor_particion.tamanio:
                     mejor_particion = particion
 
-        #print(f"\nEvaluando P{proceso.id}")
-        #print(f"Tiempo de arribo: {proceso.tiempo_arribo}")
-        #print(f"Tiempo actual: {tiempo}")
 
-        '''
-        for particion in listaParticiones:
-            print(f"Partición {particion.id}: "
-                f"{particion.tamanio} - {particion.estado}")
-
-        '''       
+    
         # Calcular la cantidad total de procesos admitidos
         cantidad_procesos = (
             len(listaListos)
@@ -77,18 +69,13 @@ def recorrer_lista_particiones_bestFit(listaAuxiliar):
             + len(listaEjecutando)
         )
 
-        #print(f"Cantidad de procesos admitidos: {cantidad_procesos}")
 
         # Si viene de Nuevos, verificar el límite
         if listaAuxiliar is listaNuevos:
             if cantidad_procesos >= 5:
                 print("Se alcanzó el límite de procesos.")
                 break
-        '''            
-        print(f"Evaluando P{proceso.id}")
-        print(f"Cantidad de procesos admitidos: {cantidad_procesos}")
-        print(f"¿Encontró partición?: {mejor_particion is not None}")
-        '''
+
 
         if mejor_particion is not None:
 
@@ -147,7 +134,7 @@ def buscar_proceso_menor_tiempo_irrupcion():
 
         if indice_menor != -1:
 
-            # Mover el proceso con menor tiempo de irrupción al inicio de la lista
+            #Mover el proceso con menor tiempo de irrupción al inicio de la lista
             proceso_menor = listaListos.pop(indice_menor)
             listaListos.insert(0, proceso_menor)
 
@@ -428,5 +415,5 @@ while len(listaListos) > 0 or len(listaNuevos) > 0 or len(listaEjecutando) > 0 o
     huboCambios = False
 
     input("\nPresioná ENTER para continuar...")
-    
+
 mostrar_informe_final()
