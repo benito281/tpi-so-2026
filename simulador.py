@@ -64,11 +64,12 @@ def recorrer_lista_particiones_bestFit(listaAuxiliar):
         #print(f"Tiempo de arribo: {proceso.tiempo_arribo}")
         #print(f"Tiempo actual: {tiempo}")
 
+        '''
         for particion in listaParticiones:
             print(f"Partición {particion.id}: "
                 f"{particion.tamanio} - {particion.estado}")
 
-       
+        '''       
         # Calcular la cantidad total de procesos admitidos
         cantidad_procesos = (
             len(listaListos)
@@ -76,17 +77,18 @@ def recorrer_lista_particiones_bestFit(listaAuxiliar):
             + len(listaEjecutando)
         )
 
-        print(f"Cantidad de procesos admitidos: {cantidad_procesos}")
+        #print(f"Cantidad de procesos admitidos: {cantidad_procesos}")
 
         # Si viene de Nuevos, verificar el límite
         if listaAuxiliar is listaNuevos:
             if cantidad_procesos >= 5:
                 print("Se alcanzó el límite de procesos.")
                 break
-
+        '''            
         print(f"Evaluando P{proceso.id}")
         print(f"Cantidad de procesos admitidos: {cantidad_procesos}")
         print(f"¿Encontró partición?: {mejor_particion is not None}")
+        '''
 
         if mejor_particion is not None:
 
@@ -122,7 +124,7 @@ def recorrer_lista_particiones_bestFit(listaAuxiliar):
 
         else:
             # Solamente los procesos nuevos pasan a suspendidos
-            print(f"P{proceso.id} no encuentra memoria disponible.")
+            #print(f"P{proceso.id} no encuentra memoria disponible.")
 
             if listaAuxiliar is listaNuevos:
                 listaListosYSuspendidos.append(proceso)
@@ -139,8 +141,8 @@ def buscar_proceso_menor_tiempo_irrupcion():
 
     if len(listaListos) > 0:
         for i in range(len(listaListos)):
-            if listaListos[i].tiempo_irrupcion < menor_tiempo:
-                menor_tiempo = listaListos[i].tiempo_irrupcion
+            if listaListos[i].tiempo_restante < menor_tiempo:
+                menor_tiempo = listaListos[i].tiempo_restante
                 indice_menor = i
 
         if indice_menor != -1:
