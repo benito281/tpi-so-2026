@@ -4,6 +4,10 @@ from tkinter import ttk, filedialog, messagebox
 
 
 class Proceso:
+    """
+    Contiene los datos que representan a un proceso.
+    """
+
     def __init__(self, id, tiempo_arribo, tiempo_irrupcion, tamanio):
         self.id = id
         self.tiempo_arribo = tiempo_arribo
@@ -16,6 +20,10 @@ class Proceso:
 
 
 class Particion:
+    """
+    Contiene los datos de una partición.
+    """
+    
     def __init__(self, id, tamanio, inicio):
         self.id = id
         self.tamanio = tamanio
@@ -25,7 +33,8 @@ class Particion:
 
 
 class Simulador:
-    """Contiene la misma lógica del simulador de consola, organizada por ciclos."""
+    """Contiene la misma lógica del simulador de
+    consola, organizada por ciclos."""
 
     def __init__(self, procesos):
         self.tiempo = 0
@@ -40,14 +49,17 @@ class Simulador:
         self.huboCambios = False
         self.finalizado = False
 
-    def recorrer_lista_particiones_bestFit(self, listaAuxiliar):
+    def recorrer_lista_particiones_bestFit(self, listaAuxiliar) -> None:
         for proceso in listaAuxiliar[:]:
             if proceso.tiempo_arribo > self.tiempo:
                 continue
 
             mejor_particion = None
             for particion in self.listaParticiones:
-                if particion.estado == "Libre" and particion.tamanio >= proceso.tamanio:
+                if (
+                    particion.estado == "Libre"
+                    and particion.tamanio >= proceso.tamanio
+                ):
                     if (
                         mejor_particion is None
                         or particion.tamanio < mejor_particion.tamanio
@@ -88,7 +100,7 @@ class Simulador:
                     listaAuxiliar.remove(proceso)
                     self.huboCambios = True
 
-    def buscar_proceso_menor_tiempo_irrupcion(self):
+    def buscar_proceso_menor_tiempo_irrupcion(self) -> None:
         menor_tiempo = float("inf")
         indice_menor = -1
 
@@ -102,7 +114,7 @@ class Simulador:
                 proceso_menor = self.listaListos.pop(indice_menor)
                 self.listaListos.insert(0, proceso_menor)
 
-    def asignar_procesos_cpu(self):
+    def asignar_procesos_cpu(self) -> None:
         if len(self.listaEjecutando) == 0 and len(self.listaListos) > 0:
             self.buscar_proceso_menor_tiempo_irrupcion()
             proceso_a_ejecutar = self.listaListos.pop(0)
@@ -118,7 +130,7 @@ class Simulador:
                 self.listaEjecutando[0] = self.listaListos.pop(0)
                 self.huboCambios = True
 
-    def liberar_particion(self, proceso):
+    def liberar_particion(self, proceso) -> None:
         for particion in self.listaParticiones:
             if particion.proceso_asignado == proceso:
                 particion.proceso_asignado = None
@@ -146,12 +158,11 @@ class Simulador:
                     self.listaParticiones.remove(particion_siguiente)
                 break
 
-    def siguiente_ciclo(self):
+    def siguiente_ciclo(self) -> None:
         if self.finalizado:
             return
 
         self.huboCambios = False
-
         self.recorrer_lista_particiones_bestFit(self.listaNuevos)
         self.recorrer_lista_particiones_bestFit(self.listaListosYSuspendidos)
 
@@ -186,7 +197,7 @@ class Simulador:
             self.finalizado = True
 
 
-def cargar_procesos(ruta):
+def cargar_procesos(ruta) -> tuple[list, list]:
     procesos = []
     errores = []
 
@@ -250,7 +261,7 @@ class InterfazSimulador:
         self.crear_interfaz()
         self.seleccionar_archivo()
 
-    def crear_interfaz(self):
+    def crear_interfaz(self) -> None:
         contenedor = ttk.Frame(self.root, padding=12)
         contenedor.pack(fill="both", expand=True)
 
@@ -381,7 +392,7 @@ class InterfazSimulador:
         )
         self.lbl_estado.pack(fill="x", pady=(8, 0))
 
-    def seleccionar_archivo(self):
+    def seleccionar_archivo(self) -> None:
         ruta = filedialog.askopenfilename(
             title="Seleccionar archivo de procesos",
             filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")],
@@ -407,13 +418,13 @@ class InterfazSimulador:
         if errores:
             messagebox.showwarning("Archivo cargado con observaciones", mensaje)
 
-    def habilitar_controles(self):
+    def habilitar_controles(self) -> None:
         self.btn_siguiente.config(state="normal")
         self.btn_iniciar.config(state="normal")
         self.btn_reiniciar.config(state="normal")
         self.btn_pausar.config(state="disabled")
 
-    def actualizar_vista(self):
+    def actualizar_vista(self) -> None:
         if self.simulador is None:
             return
         s = self.simulador
@@ -448,7 +459,9 @@ class InterfazSimulador:
             part.tamanio for part in s.listaParticiones if part.estado != "Libre"
         )
         self.lbl_memoria.config(
-            text=f"Memoria libre: {memoria_libre} KB | Ocupada: {memoria_ocupada} KB | Total: {memoria_libre + memoria_ocupada} KB"
+            text=f"Memoria libre: {memoria_libre} KB"
+                f" | Ocupada: {memoria_ocupada} KB"
+                f" | Total: {memoria_libre + memoria_ocupada} KB"
         )
         self.dibujar_memoria()
 
@@ -462,7 +475,7 @@ class InterfazSimulador:
             self.btn_siguiente.config(state="normal")
             self.btn_iniciar.config(state="normal")
 
-    def dibujar_memoria(self):
+    def dibujar_memoria(self) -> None:
         if self.simulador is None or not hasattr(self, "canvas_memoria"):
             return
         canvas = self.canvas_memoria
@@ -517,13 +530,13 @@ class InterfazSimulador:
             )
             x = x2 + espacio
 
-    def avanzar(self):
+    def avanzar(self) -> None:
         if self.simulador is None or self.simulador.finalizado:
             return
         self.simulador.siguiente_ciclo()
         self.actualizar_vista()
 
-    def iniciar(self):
+    def iniciar(self) -> None:
         if (
             self.simulador is None
             or self.simulador.finalizado
@@ -535,7 +548,7 @@ class InterfazSimulador:
         self.btn_siguiente.config(state="disabled")
         self.ejecutar_automatico()
 
-    def ejecutar_automatico(self):
+    def ejecutar_automatico(self) -> None:
         if self.simulador is None or self.simulador.finalizado:
             self.pausar()
             return
@@ -549,7 +562,7 @@ class InterfazSimulador:
             self.after_id = None
             self.pausar()
 
-    def pausar(self):
+    def pausar(self) -> None:
         if self.after_id is not None:
             self.root.after_cancel(self.after_id)
             self.after_id = None
@@ -558,7 +571,7 @@ class InterfazSimulador:
             self.btn_siguiente.config(state="normal")
             self.btn_pausar.config(state="disabled")
 
-    def reiniciar(self):
+    def reiniciar(self) -> None:
         if not self.archivo_actual:
             return
         self.pausar()
@@ -575,7 +588,7 @@ class InterfazSimulador:
         except Exception as error:
             messagebox.showerror("Error", str(error))
 
-    def mostrar_informe(self):
+    def mostrar_informe(self) -> None:
         s = self.simulador
         self.tabla_informe.delete(*self.tabla_informe.get_children())
         procesos = sorted(s.listaTerminados, key=lambda p: p.id)
