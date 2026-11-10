@@ -48,7 +48,10 @@ class Simulador:
             mejor_particion = None
             for particion in self.listaParticiones:
                 if particion.estado == "Libre" and particion.tamanio >= proceso.tamanio:
-                    if mejor_particion is None or particion.tamanio < mejor_particion.tamanio:
+                    if (
+                        mejor_particion is None
+                        or particion.tamanio < mejor_particion.tamanio
+                    ):
                         mejor_particion = particion
 
             cantidad_procesos = (
@@ -70,7 +73,7 @@ class Simulador:
                     nueva_particion = Particion(
                         self.nroParticiones,
                         tamanioOriginal - proceso.tamanio,
-                        mejor_particion.inicio + proceso.tamanio
+                        mejor_particion.inicio + proceso.tamanio,
                     )
                     indice = self.listaParticiones.index(mejor_particion)
                     self.listaParticiones.insert(indice + 1, nueva_particion)
@@ -123,7 +126,10 @@ class Simulador:
                 indice_particion = self.listaParticiones.index(particion)
 
                 # Fusionar con la partición anterior si está libre.
-                if indice_particion > 0 and self.listaParticiones[indice_particion - 1].estado == "Libre":
+                if (
+                    indice_particion > 0
+                    and self.listaParticiones[indice_particion - 1].estado == "Libre"
+                ):
                     particion_anterior = self.listaParticiones[indice_particion - 1]
                     particion_anterior.tamanio += particion.tamanio
                     self.listaParticiones.remove(particion)
@@ -131,8 +137,10 @@ class Simulador:
                     indice_particion -= 1
 
                 # Fusionar con la partición siguiente si está libre.
-                if (indice_particion < len(self.listaParticiones) - 1
-                        and self.listaParticiones[indice_particion + 1].estado == "Libre"):
+                if (
+                    indice_particion < len(self.listaParticiones) - 1
+                    and self.listaParticiones[indice_particion + 1].estado == "Libre"
+                ):
                     particion_siguiente = self.listaParticiones[indice_particion + 1]
                     particion.tamanio += particion_siguiente.tamanio
                     self.listaParticiones.remove(particion_siguiente)
@@ -152,8 +160,12 @@ class Simulador:
 
             if proceso.tiempo_restante <= 0:
                 proceso.tiempo_finalizacion = self.tiempo + 1
-                proceso.tiempo_retorno = proceso.tiempo_finalizacion - proceso.tiempo_arribo
-                proceso.tiempo_espera = proceso.tiempo_retorno - proceso.tiempo_irrupcion
+                proceso.tiempo_retorno = (
+                    proceso.tiempo_finalizacion - proceso.tiempo_arribo
+                )
+                proceso.tiempo_espera = (
+                    proceso.tiempo_retorno - proceso.tiempo_irrupcion
+                )
 
                 self.listaTerminados.append(proceso)
                 self.listaEjecutando.remove(proceso)
@@ -165,7 +177,12 @@ class Simulador:
 
         self.tiempo += 1
 
-        if not (self.listaListos or self.listaNuevos or self.listaEjecutando or self.listaListosYSuspendidos):
+        if not (
+            self.listaListos
+            or self.listaNuevos
+            or self.listaEjecutando
+            or self.listaListosYSuspendidos
+        ):
             self.finalizado = True
 
 
@@ -195,13 +212,19 @@ def cargar_procesos(ruta):
                 errores.append(f"Fila {numero_fila}: ID negativo; se omitió.")
                 continue
             if tiempo_arribo < 0:
-                errores.append(f"Fila {numero_fila}: tiempo de arribo negativo; se omitió.")
+                errores.append(
+                    f"Fila {numero_fila}: tiempo de arribo negativo; se omitió."
+                )
                 continue
             if tiempo_irrupcion < 0:
-                errores.append(f"Fila {numero_fila}: tiempo de irrupción negativo; se omitió.")
+                errores.append(
+                    f"Fila {numero_fila}: tiempo de irrupción negativo; se omitió."
+                )
                 continue
             if tamanio < 0 or tamanio > 450:
-                errores.append(f"Fila {numero_fila}: tamaño fuera del rango 0-450; se omitió.")
+                errores.append(
+                    f"Fila {numero_fila}: tamaño fuera del rango 0-450; se omitió."
+                )
                 continue
 
             procesos.append(Proceso(id, tiempo_arribo, tiempo_irrupcion, tamanio))
@@ -234,32 +257,46 @@ class InterfazSimulador:
         encabezado = ttk.Frame(contenedor)
         encabezado.pack(fill="x", pady=(0, 10))
 
-        ttk.Label(encabezado, text="SIMULADOR DE PROCESOS",
-                  font=("Segoe UI", 17, "bold")).pack(side="left")
-        self.lbl_tiempo = ttk.Label(encabezado, text="Tiempo: —",
-                                    font=("Segoe UI", 13, "bold"))
+        ttk.Label(
+            encabezado, text="SIMULADOR DE PROCESOS", font=("Segoe UI", 17, "bold")
+        ).pack(side="left")
+        self.lbl_tiempo = ttk.Label(
+            encabezado, text="Tiempo: —", font=("Segoe UI", 13, "bold")
+        )
         self.lbl_tiempo.pack(side="right")
 
         controles = ttk.LabelFrame(contenedor, text="Controles", padding=8)
         controles.pack(fill="x", pady=(0, 10))
 
-        ttk.Button(controles, text="Cargar CSV", command=self.seleccionar_archivo).pack(side="left", padx=4)
-        self.btn_siguiente = ttk.Button(controles, text="Siguiente ciclo",
-                                        command=self.avanzar, state="disabled")
+        ttk.Button(controles, text="Cargar CSV", command=self.seleccionar_archivo).pack(
+            side="left", padx=4
+        )
+        self.btn_siguiente = ttk.Button(
+            controles, text="Siguiente ciclo", command=self.avanzar, state="disabled"
+        )
         self.btn_siguiente.pack(side="left", padx=4)
-        self.btn_iniciar = ttk.Button(controles, text="Iniciar", command=self.iniciar,
-                                      state="disabled")
+        self.btn_iniciar = ttk.Button(
+            controles, text="Iniciar", command=self.iniciar, state="disabled"
+        )
         self.btn_iniciar.pack(side="left", padx=4)
-        self.btn_pausar = ttk.Button(controles, text="Pausar", command=self.pausar,
-                                     state="disabled")
+        self.btn_pausar = ttk.Button(
+            controles, text="Pausar", command=self.pausar, state="disabled"
+        )
         self.btn_pausar.pack(side="left", padx=4)
-        self.btn_reiniciar = ttk.Button(controles, text="Reiniciar", command=self.reiniciar,
-                                        state="disabled")
+        self.btn_reiniciar = ttk.Button(
+            controles, text="Reiniciar", command=self.reiniciar, state="disabled"
+        )
         self.btn_reiniciar.pack(side="left", padx=4)
 
         ttk.Label(controles, text="Velocidad:").pack(side="left", padx=(18, 4))
-        ttk.Scale(controles, from_=150, to=2000, variable=self.velocidad,
-                  orient="horizontal", length=150).pack(side="left")
+        ttk.Scale(
+            controles,
+            from_=150,
+            to=2000,
+            variable=self.velocidad,
+            orient="horizontal",
+            length=150,
+        ).pack(side="left")
         self.lbl_archivo = ttk.Label(controles, text="Ningún archivo cargado")
         self.lbl_archivo.pack(side="right", padx=5)
 
@@ -296,46 +333,58 @@ class InterfazSimulador:
 
         cpu = ttk.LabelFrame(derecha, text="CPU", padding=10)
         cpu.pack(fill="x", pady=(0, 8))
-        self.lbl_cpu = ttk.Label(cpu, text="Sin proceso ejecutándose",
-                                 font=("Segoe UI", 12, "bold"))
+        self.lbl_cpu = ttk.Label(
+            cpu, text="Sin proceso ejecutándose", font=("Segoe UI", 12, "bold")
+        )
         self.lbl_cpu.pack(anchor="w")
 
         memoria = ttk.LabelFrame(derecha, text="Distribución de memoria", padding=10)
         memoria.pack(fill="both", expand=True)
         self.canvas_memoria = tk.Canvas(
-            memoria, height=150, background="#17191d",
-            highlightthickness=0
+            memoria, height=150, background="#17191d", highlightthickness=0
         )
         self.canvas_memoria.pack(fill="x", expand=True)
         self.canvas_memoria.bind("<Configure>", lambda event: self.dibujar_memoria())
-        ttk.Label(memoria, text="Azul: ocupada     Gris: libre",
-                  font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 0))
+        ttk.Label(
+            memoria, text="Azul: ocupada     Gris: libre", font=("Segoe UI", 9)
+        ).pack(anchor="w", pady=(5, 0))
         self.lbl_memoria = ttk.Label(memoria, text="Memoria libre: 450 | Ocupada: 0")
         self.lbl_memoria.pack(anchor="w", pady=(5, 0))
 
         informe = ttk.LabelFrame(contenedor, text="Informe final", padding=8)
         informe.pack(fill="x", pady=(10, 0))
         cols = ("proceso", "arribo", "finalizacion", "retorno", "espera")
-        self.tabla_informe = ttk.Treeview(informe, columns=cols, show="headings", height=4)
+        self.tabla_informe = ttk.Treeview(
+            informe, columns=cols, show="headings", height=4
+        )
         titulos_inf = {
-            "proceso": "Proceso", "arribo": "Arribo", "finalizacion": "Finalización",
-            "retorno": "Retorno", "espera": "Espera"
+            "proceso": "Proceso",
+            "arribo": "Arribo",
+            "finalizacion": "Finalización",
+            "retorno": "Retorno",
+            "espera": "Espera",
         }
         for col in cols:
             self.tabla_informe.heading(col, text=titulos_inf[col])
             self.tabla_informe.column(col, width=110, anchor="center")
         self.tabla_informe.pack(fill="x")
-        self.lbl_estadisticas = ttk.Label(informe, text="El informe estará disponible al finalizar.")
+        self.lbl_estadisticas = ttk.Label(
+            informe, text="El informe estará disponible al finalizar."
+        )
         self.lbl_estadisticas.pack(anchor="w", pady=(6, 0))
 
-        self.lbl_estado = ttk.Label(contenedor, text="Cargá un archivo CSV para comenzar.",
-                                   relief="sunken", anchor="w")
+        self.lbl_estado = ttk.Label(
+            contenedor,
+            text="Cargá un archivo CSV para comenzar.",
+            relief="sunken",
+            anchor="w",
+        )
         self.lbl_estado.pack(fill="x", pady=(8, 0))
 
     def seleccionar_archivo(self):
         ruta = filedialog.askopenfilename(
             title="Seleccionar archivo de procesos",
-            filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")]
+            filetypes=[("Archivos CSV", "*.csv"), ("Todos los archivos", "*.*")],
         )
         if not ruta:
             return
@@ -386,12 +435,18 @@ class InterfazSimulador:
 
         if s.listaEjecutando:
             p = s.listaEjecutando[0]
-            self.lbl_cpu.config(text=f"P{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}")
+            self.lbl_cpu.config(
+                text=f"P{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}"
+            )
         else:
             self.lbl_cpu.config(text="CPU libre")
 
-        memoria_libre = sum(part.tamanio for part in s.listaParticiones if part.estado == "Libre")
-        memoria_ocupada = sum(part.tamanio for part in s.listaParticiones if part.estado != "Libre")
+        memoria_libre = sum(
+            part.tamanio for part in s.listaParticiones if part.estado == "Libre"
+        )
+        memoria_ocupada = sum(
+            part.tamanio for part in s.listaParticiones if part.estado != "Libre"
+        )
         self.lbl_memoria.config(
             text=f"Memoria libre: {memoria_libre} KB | Ocupada: {memoria_ocupada} KB | Total: {memoria_libre + memoria_ocupada} KB"
         )
@@ -416,7 +471,9 @@ class InterfazSimulador:
         alto = max(canvas.winfo_height(), 110)
         margen = 8
         espacio = 4
-        ancho_util = ancho - margen * 2 - espacio * (len(self.simulador.listaParticiones) - 1)
+        ancho_util = (
+            ancho - margen * 2 - espacio * (len(self.simulador.listaParticiones) - 1)
+        )
         x = margen
         y1, y2 = 12, min(alto - 28, 92)
 
@@ -429,16 +486,35 @@ class InterfazSimulador:
             canvas.create_rectangle(x, y1, x2, y2, fill=color, outline=color, width=1)
             if w >= 42:
                 proceso = f"P{part.proceso_asignado.id}" if ocupada else "Libre"
-                canvas.create_text((x + x2) / 2, y1 + 27, text=proceso,
-                                   fill=color_texto, font=("Segoe UI", 10, "bold"))
-                canvas.create_text((x + x2) / 2, y1 + 51, text=f"{part.tamanio} KB",
-                                   fill=color_texto, font=("Segoe UI", 9))
+                canvas.create_text(
+                    (x + x2) / 2,
+                    y1 + 27,
+                    text=proceso,
+                    fill=color_texto,
+                    font=("Segoe UI", 10, "bold"),
+                )
+                canvas.create_text(
+                    (x + x2) / 2,
+                    y1 + 51,
+                    text=f"{part.tamanio} KB",
+                    fill=color_texto,
+                    font=("Segoe UI", 9),
+                )
             elif w >= 20:
-                canvas.create_text((x + x2) / 2, (y1 + y2) / 2,
-                                   text=f"{part.tamanio}", fill=color_texto,
-                                   font=("Segoe UI", 8, "bold"))
-            canvas.create_text((x + x2) / 2, y2 + 13, text=f"#{part.id}",
-                               fill="#d5d9df", font=("Segoe UI", 8))
+                canvas.create_text(
+                    (x + x2) / 2,
+                    (y1 + y2) / 2,
+                    text=f"{part.tamanio}",
+                    fill=color_texto,
+                    font=("Segoe UI", 8, "bold"),
+                )
+            canvas.create_text(
+                (x + x2) / 2,
+                y2 + 13,
+                text=f"#{part.id}",
+                fill="#d5d9df",
+                font=("Segoe UI", 8),
+            )
             x = x2 + espacio
 
     def avanzar(self):
@@ -448,7 +524,11 @@ class InterfazSimulador:
         self.actualizar_vista()
 
     def iniciar(self):
-        if self.simulador is None or self.simulador.finalizado or self.after_id is not None:
+        if (
+            self.simulador is None
+            or self.simulador.finalizado
+            or self.after_id is not None
+        ):
             return
         self.btn_iniciar.config(state="disabled")
         self.btn_pausar.config(state="normal")
@@ -462,7 +542,9 @@ class InterfazSimulador:
         self.simulador.siguiente_ciclo()
         self.actualizar_vista()
         if not self.simulador.finalizado:
-            self.after_id = self.root.after(max(50, int(self.velocidad.get())), self.ejecutar_automatico)
+            self.after_id = self.root.after(
+                max(50, int(self.velocidad.get())), self.ejecutar_automatico
+            )
         else:
             self.after_id = None
             self.pausar()
@@ -485,7 +567,9 @@ class InterfazSimulador:
             self.simulador = Simulador(procesos)
             self.actualizar_vista()
             self.lbl_estado.config(text="Simulación reiniciada.")
-            self.lbl_estadisticas.config(text="El informe estará disponible al finalizar.")
+            self.lbl_estadisticas.config(
+                text="El informe estará disponible al finalizar."
+            )
             self.tabla_informe.delete(*self.tabla_informe.get_children())
             self.habilitar_controles()
         except Exception as error:
@@ -499,9 +583,15 @@ class InterfazSimulador:
         suma_retorno = 0
         for p in procesos:
             self.tabla_informe.insert(
-                "", "end",
-                values=(f"P{p.id}", p.tiempo_arribo, p.tiempo_finalizacion,
-                        p.tiempo_retorno, p.tiempo_espera)
+                "",
+                "end",
+                values=(
+                    f"P{p.id}",
+                    p.tiempo_arribo,
+                    p.tiempo_finalizacion,
+                    p.tiempo_retorno,
+                    p.tiempo_espera,
+                ),
             )
             suma_espera += p.tiempo_espera
             suma_retorno += p.tiempo_retorno
@@ -512,12 +602,16 @@ class InterfazSimulador:
             promedio_retorno = suma_retorno / cantidad
             rendimiento = cantidad / s.tiempo if s.tiempo > 0 else 0
             self.lbl_estadisticas.config(
-                text=(f"Espera promedio: {promedio_espera:.2f}    "
-                      f"Retorno promedio: {promedio_retorno:.2f}    "
-                      f"Rendimiento: {rendimiento:.2f} procesos/unidad de tiempo")
+                text=(
+                    f"Espera promedio: {promedio_espera:.2f}    "
+                    f"Retorno promedio: {promedio_retorno:.2f}    "
+                    f"Rendimiento: {rendimiento:.2f} procesos/unidad de tiempo"
+                )
             )
         else:
-            self.lbl_estadisticas.config(text="No hay procesos terminados para calcular estadísticas.")
+            self.lbl_estadisticas.config(
+                text="No hay procesos terminados para calcular estadísticas."
+            )
 
 
 if __name__ == "__main__":
