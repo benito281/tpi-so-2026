@@ -304,9 +304,12 @@ class InterfazSimulador:
         ]
         for clave, titulo in nombres:
             grupo = ttk.LabelFrame(estados, text=titulo, padding=5)
-            grupo.pack(fill="x", pady=4)
+            grupo.pack(fill="both", expand=True, pady=4)
+
             columnas = ("id", "arribo", "restante", "memoria")
-            arbol = ttk.Treeview(grupo, columns=columnas, show="headings", height=2)
+            arbol = ttk.Treeview(
+                grupo, columns=columnas, show="headings", height=3
+            )
 
             arbol.heading("id", text="Proceso")
             arbol.heading("arribo", text="T de Arribo")
@@ -316,7 +319,8 @@ class InterfazSimulador:
             arbol.column("arribo", width=80, anchor="center")
             arbol.column("restante", width=100, anchor="center")
             arbol.column("memoria", width=80, anchor="center")
-            arbol.pack(fill="x")
+
+            arbol.pack(fill="both", expand=True)
             self.arboles[clave] = arbol
 
         derecha = ttk.Frame(paneles)
@@ -343,7 +347,7 @@ class InterfazSimulador:
         self.canvas_memoria = tk.Canvas(
             memoria, height=110, background="#17191d", highlightthickness=0
         )
-        self.canvas_memoria.pack(fill="x", expand=True)
+        self.canvas_memoria.pack(fill="both", expand=True)
         self.canvas_memoria.bind("<Configure>", lambda event: self.dibujar_memoria())
 
         columnas_memoria = ("id", "inicio", "tamanio", "proceso")
@@ -362,7 +366,7 @@ class InterfazSimulador:
         self.tabla_particiones.column("tamanio", width=100, anchor="center")
         self.tabla_particiones.column("proceso", width=110, anchor="center")
 
-        self.tabla_particiones.pack(fill="x", pady=(8, 0))
+        self.tabla_particiones.pack(fill="both", expand=True, pady=(8, 0))
 
         ttk.Label(
             memoria, text="Azul: ocupada     Gris: libre", font=("Segoe UI", 9)
@@ -374,7 +378,7 @@ class InterfazSimulador:
         informe.pack(fill="x", pady=(10, 0))
         cols = ("proceso", "arribo", "finalizacion", "retorno", "espera")
         self.tabla_informe = ttk.Treeview(
-            informe, columns=cols, show="headings", height=4
+            informe, columns=cols, show="headings", height=2
         )
         titulos_inf = {
             "proceso": "Proceso",
@@ -533,7 +537,8 @@ class InterfazSimulador:
             ancho - margen * 2 - espacio * (len(self.simulador.listaParticiones) - 1)
         )
         x = margen
-        y1, y2 = 12, min(alto - 28, 92)
+        y1 = alto * 0.15
+        y2 = alto * 0.75
 
         for part in self.simulador.listaParticiones:
             w = max(2, ancho_util * part.tamanio / self.simulador.tamanioMaximo)
@@ -546,14 +551,14 @@ class InterfazSimulador:
                 proceso = part.proceso_asignado.id if ocupada else "Libre"
                 canvas.create_text(
                     (x + x2) / 2,
-                    y1 + 27,
+                    y1 + (y2 - y1) * 0.38,
                     text=proceso,
                     fill=color_texto,
                     font=("Segoe UI", 10, "bold"),
                 )
                 canvas.create_text(
                     (x + x2) / 2,
-                    y1 + 51,
+                    y1 + (y2 - y1) * 0.68,
                     text=f"{part.tamanio} KB",
                     fill=color_texto,
                     font=("Segoe UI", 9),
