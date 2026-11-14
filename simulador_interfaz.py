@@ -207,7 +207,7 @@ def cargar_procesos(ruta) -> tuple[list, list]:
                 break
 
             try:
-                id = int(fila[0])
+                id = str(fila[0])
                 tiempo_arribo = int(fila[1])
                 tiempo_irrupcion = int(fila[2])
                 tamanio = int(fila[3])
@@ -215,9 +215,7 @@ def cargar_procesos(ruta) -> tuple[list, list]:
                 errores.append(f"Fila {numero_fila}: datos inválidos; se omitió.")
                 continue
 
-            if id < 0:
-                errores.append(f"Fila {numero_fila}: ID negativo; se omitió.")
-                continue
+
             if tiempo_arribo < 0:
                 errores.append(
                     f"Fila {numero_fila}: tiempo de arribo negativo; se omitió."
@@ -451,7 +449,7 @@ class InterfazSimulador:
             self.lbl_tiempo.config(text=f"Tiempo: {s.tiempo}")
 
         if s.procesos_arribados_en_tiempo:
-            arribos = ", ".join(f"P{p.id}" for p in s.procesos_arribados_en_tiempo)
+            arribos = ", ".join(p.id for p in s.procesos_arribados_en_tiempo)
         else:
             arribos = "Ninguno"
 
@@ -459,7 +457,7 @@ class InterfazSimulador:
 
         if s.procesos_finalizados_en_tiempo:
             finalizados = ", ".join(
-                f"P{p.id}" for p in s.procesos_finalizados_en_tiempo
+                p.id for p in s.procesos_finalizados_en_tiempo
             )
         else:
             finalizados = "Ninguna"
@@ -478,13 +476,13 @@ class InterfazSimulador:
             for p in procesos:
                 restante = p.tiempo_restante if nombre != "Terminados" else "—"
                 arbol.insert(
-                    "", "end", values=(f"P{p.id}", p.tiempo_arribo, restante, p.tamanio)
+                    "", "end", values=(p.id, p.tiempo_arribo, restante, p.tamanio)
                 )
 
         if s.cpu is not None:
             p = s.cpu
             self.lbl_cpu.config(
-                text=f"P{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}"
+                text=f"{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}"
             )
         else:
             self.lbl_cpu.config(text="CPU libre")
@@ -506,7 +504,7 @@ class InterfazSimulador:
 
         for part in s.listaParticiones:
             proceso = (
-                f"P{part.proceso_asignado.id}"
+                part.proceso_asignado.id
                 if part.proceso_asignado is not None
                 else "Libre"
             )
@@ -545,7 +543,7 @@ class InterfazSimulador:
             x2 = x + w
             canvas.create_rectangle(x, y1, x2, y2, fill=color, outline=color, width=1)
             if w >= 42:
-                proceso = f"P{part.proceso_asignado.id}" if ocupada else "Libre"
+                proceso = part.proceso_asignado.id if ocupada else "Libre"
                 canvas.create_text(
                     (x + x2) / 2,
                     y1 + 27,
@@ -610,7 +608,7 @@ class InterfazSimulador:
                 "",
                 "end",
                 values=(
-                    f"P{p.id}",
+                    p.id,
                     p.tiempo_arribo,
                     p.tiempo_finalizacion,
                     p.tiempo_retorno,
