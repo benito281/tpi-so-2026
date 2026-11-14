@@ -32,21 +32,20 @@ class Particion:
         self.estado = "Libre"
 
 
-class Simulador:
-    """Contiene la misma lógica del simulador de
-    consola, organizada por ciclos."""
+class Simulador:    
 
     def __init__(self, procesos):
-        self.tiempo = 0
+        self.tiempo = -1
         self.tamanioMaximo = 450
         self.listaNuevos = list(procesos)
+        self.procesos_arribados_en_tiempo = []
+        self.procesos_finalizados_en_tiempo = []
         self.listaListos = []
         self.listaListosYSuspendidos = []
-        self.listaEjecutando = []
+        self.cpu = None
         self.listaTerminados = []
         self.listaParticiones = [Particion(1, self.tamanioMaximo, 0)]
         self.nroParticiones = 1
-        self.huboCambios = False
         self.finalizado = False
 
     def recorrer_lista_particiones_bestFit(self, listaAuxiliar) -> None:
@@ -69,7 +68,7 @@ class Simulador:
             cantidad_procesos = (
                 len(self.listaListos)
                 + len(self.listaListosYSuspendidos)
-                + len(self.listaEjecutando)
+                + (1 if self.cpu is not None else 0)
             )
 
             if listaAuxiliar is self.listaNuevos and cantidad_procesos >= 5:
@@ -93,12 +92,10 @@ class Simulador:
                 mejor_particion.tamanio = proceso.tamanio
                 self.listaListos.append(proceso)
                 listaAuxiliar.remove(proceso)
-                self.huboCambios = True
             else:
                 if listaAuxiliar is self.listaNuevos:
                     self.listaListosYSuspendidos.append(proceso)
                     listaAuxiliar.remove(proceso)
-                    self.huboCambios = True
 
     def buscar_proceso_menor_tiempo_irrupcion(self) -> None:
         menor_tiempo = float("inf")
@@ -114,21 +111,19 @@ class Simulador:
                 proceso_menor = self.listaListos.pop(indice_menor)
                 self.listaListos.insert(0, proceso_menor)
 
-    def asignar_procesos_cpu(self) -> None:
-        if len(self.listaEjecutando) == 0 and len(self.listaListos) > 0:
+    def asignar_procesos_cpu(self):
+        if self.cpu is None and len(self.listaListos) > 0:
             self.buscar_proceso_menor_tiempo_irrupcion()
             proceso_a_ejecutar = self.listaListos.pop(0)
-            self.listaEjecutando.append(proceso_a_ejecutar)
-            self.huboCambios = True
+            self.cpu = proceso_a_ejecutar
 
-        elif len(self.listaEjecutando) > 0 and len(self.listaListos) > 0:
-            current_proceso = self.listaEjecutando[0]
+        elif self.cpu is not None and len(self.listaListos) > 0:
+            current_proceso = self.cpu
             self.buscar_proceso_menor_tiempo_irrupcion()
 
             if self.listaListos[0].tiempo_restante < current_proceso.tiempo_restante:
                 self.listaListos.append(current_proceso)
-                self.listaEjecutando[0] = self.listaListos.pop(0)
-                self.huboCambios = True
+                self.cpu = self.listaListos.pop(0)
 
     def liberar_particion(self, proceso) -> None:
         for particion in self.listaParticiones:
@@ -161,12 +156,11 @@ class Simulador:
     def siguiente_ciclo(self) -> None:
         if self.finalizado:
             return
+ 
+        self.procesos_finalizados_en_tiempo = []
 
-        self.huboCambios = False
-        self.recorrer_lista_particiones_bestFit(self.listaNuevos)
-        self.recorrer_lista_particiones_bestFit(self.listaListosYSuspendidos)
-
-        for proceso in self.listaEjecutando[:]:
+        if self.cpu is not None:
+            proceso = self.cpu
             proceso.tiempo_restante -= 1
 
             if proceso.tiempo_restante <= 0:
@@ -179,21 +173,22 @@ class Simulador:
                 )
 
                 self.listaTerminados.append(proceso)
-                self.listaEjecutando.remove(proceso)
+                self.procesos_finalizados_en_tiempo.append(proceso)
+                self.cpu = None
                 self.liberar_particion(proceso)
-                self.huboCambios = True
 
+        
+
+        self.tiempo += 1   
+        self.procesos_arribados_en_tiempo = [
+            proceso for proceso in self.listaNuevos
+            if proceso.tiempo_arribo == self.tiempo
+        ]    
         self.recorrer_lista_particiones_bestFit(self.listaNuevos)
+        self.recorrer_lista_particiones_bestFit(self.listaListosYSuspendidos)
         self.asignar_procesos_cpu()
 
-        self.tiempo += 1
-
-        if not (
-            self.listaListos
-            or self.listaNuevos
-            or self.listaEjecutando
-            or self.listaListosYSuspendidos
-        ):
+        if not (self.listaListos or self.listaNuevos or self.cpu is not None or self.listaListosYSuspendidos):
             self.finalizado = True
 
 
@@ -250,12 +245,10 @@ class InterfazSimulador:
     def __init__(self, root):
         self.root = root
         self.root.title("Simulador de gestión de memoria y CPU")
-        self.root.geometry("1120x790")
-        self.root.minsize(950, 650)
+        self.root.geometry("1120x830")
+        self.root.minsize(950, 700)
 
         self.simulador = None
-        self.after_id = None
-        self.velocidad = tk.IntVar(value=900)
         self.archivo_actual = None
 
         self.crear_interfaz()
@@ -279,35 +272,17 @@ class InterfazSimulador:
         controles = ttk.LabelFrame(contenedor, text="Controles", padding=8)
         controles.pack(fill="x", pady=(0, 10))
 
-        ttk.Button(controles, text="Cargar CSV", command=self.seleccionar_archivo).pack(
-            side="left", padx=4
-        )
-        self.btn_siguiente = ttk.Button(
-            controles, text="Siguiente ciclo", command=self.avanzar, state="disabled"
-        )
+        ttk.Button(controles, text="Cargar CSV", command=self.seleccionar_archivo).pack(side="left", padx=4)
+           
+        self.btn_siguiente = ttk.Button(controles, text="Iniciar", command=self.avanzar, state="disabled")
+ 
+        
         self.btn_siguiente.pack(side="left", padx=4)
-        self.btn_iniciar = ttk.Button(
-            controles, text="Iniciar", command=self.iniciar, state="disabled"
-        )
-        self.btn_iniciar.pack(side="left", padx=4)
-        self.btn_pausar = ttk.Button(
-            controles, text="Pausar", command=self.pausar, state="disabled"
-        )
-        self.btn_pausar.pack(side="left", padx=4)
-        self.btn_reiniciar = ttk.Button(
-            controles, text="Reiniciar", command=self.reiniciar, state="disabled"
-        )
+        
+        self.btn_reiniciar = ttk.Button(controles, text="Reiniciar", command=self.reiniciar,
+                                        state="disabled")
         self.btn_reiniciar.pack(side="left", padx=4)
-
-        ttk.Label(controles, text="Velocidad:").pack(side="left", padx=(18, 4))
-        ttk.Scale(
-            controles,
-            from_=150,
-            to=2000,
-            variable=self.velocidad,
-            orient="horizontal",
-            length=150,
-        ).pack(side="left")
+        
         self.lbl_archivo = ttk.Label(controles, text="Ningún archivo cargado")
         self.lbl_archivo.pack(side="right", padx=5)
 
@@ -322,20 +297,22 @@ class InterfazSimulador:
             ("Nuevos", "NUEVOS"),
             ("Listos", "LISTOS"),
             ("Listos y suspendidos", "LISTOS Y SUSPENDIDOS"),
-            ("Ejecutando", "EJECUTANDO"),
             ("Terminados", "TERMINADOS"),
         ]
         for clave, titulo in nombres:
             grupo = ttk.LabelFrame(estados, text=titulo, padding=5)
             grupo.pack(fill="x", pady=4)
-            columnas = ("id", "restante", "memoria")
-            arbol = ttk.Treeview(grupo, columns=columnas, show="headings", height=3)
+            columnas = ("id", "arribo","restante", "memoria")
+            arbol = ttk.Treeview(grupo, columns=columnas, show="headings", height=2)
+            
             arbol.heading("id", text="Proceso")
-            arbol.heading("restante", text="Tiempo restante")
+            arbol.heading("arribo", text="T de Arribo")
+            arbol.heading("restante", text="TI Restante")
             arbol.heading("memoria", text="Tamaño")
-            arbol.column("id", width=85, anchor="center")
-            arbol.column("restante", width=120, anchor="center")
-            arbol.column("memoria", width=90, anchor="center")
+            arbol.column("id", width=70, anchor="center")
+            arbol.column("arribo", width=80, anchor="center")
+            arbol.column("restante", width=100, anchor="center")
+            arbol.column("memoria", width=80, anchor="center")
             arbol.pack(fill="x")
             self.arboles[clave] = arbol
 
@@ -349,16 +326,48 @@ class InterfazSimulador:
         )
         self.lbl_cpu.pack(anchor="w")
 
+        eventos = ttk.LabelFrame(derecha, text="Eventos del instante", padding=8)
+        eventos.pack(fill="x", pady=(0, 8))
+
+        self.lbl_arribos = ttk.Label(eventos, text="Arribos: ninguno")
+        self.lbl_arribos.pack(anchor="w")
+
+        self.lbl_finalizados = ttk.Label(eventos, text="Finalizaciones: ninguna")
+        self.lbl_finalizados.pack(anchor="w")
+
         memoria = ttk.LabelFrame(derecha, text="Distribución de memoria", padding=10)
         memoria.pack(fill="both", expand=True)
         self.canvas_memoria = tk.Canvas(
-            memoria, height=150, background="#17191d", highlightthickness=0
+            memoria, height=110, background="#17191d",
+            highlightthickness=0
         )
         self.canvas_memoria.pack(fill="x", expand=True)
         self.canvas_memoria.bind("<Configure>", lambda event: self.dibujar_memoria())
-        ttk.Label(
-            memoria, text="Azul: ocupada     Gris: libre", font=("Segoe UI", 9)
-        ).pack(anchor="w", pady=(5, 0))
+
+        columnas_memoria = ("id", "inicio", "tamanio", "proceso")
+
+        self.tabla_particiones = ttk.Treeview(
+            memoria,
+            columns=columnas_memoria,
+            show="headings",
+            height=4
+        )
+
+        self.tabla_particiones.heading("id", text="Partición")
+        self.tabla_particiones.heading("inicio", text="Inicio (KB)")
+        self.tabla_particiones.heading("tamanio", text="Tamaño (KB)")
+        self.tabla_particiones.heading("proceso", text="Proceso asignado")
+
+        self.tabla_particiones.column("id", width=65, anchor="center")
+        self.tabla_particiones.column("inicio", width=90, anchor="center")
+        self.tabla_particiones.column("tamanio", width=100, anchor="center")
+        self.tabla_particiones.column("proceso", width=110, anchor="center")
+
+        self.tabla_particiones.pack(fill="x", pady=(8, 0))
+
+
+        ttk.Label(memoria, text="Azul: ocupada     Gris: libre",
+                  font=("Segoe UI", 9)).pack(anchor="w", pady=(5, 0))
         self.lbl_memoria = ttk.Label(memoria, text="Memoria libre: 450 | Ocupada: 0")
         self.lbl_memoria.pack(anchor="w", pady=(5, 0))
 
@@ -404,11 +413,17 @@ class InterfazSimulador:
         except (OSError, ValueError, csv.Error) as error:
             messagebox.showerror("Error al cargar", str(error))
             return
-
-        self.pausar()
+        
         self.simulador = Simulador(procesos)
         self.archivo_actual = ruta
         self.lbl_archivo.config(text=ruta.split("/")[-1].split("\\")[-1])
+        
+
+        self.tabla_informe.delete(*self.tabla_informe.get_children())
+        self.lbl_estadisticas.config(
+            text="El informe estará disponible al finalizar."
+        )
+
         self.habilitar_controles()
         self.actualizar_vista()
         mensaje = f"Se cargaron {len(procesos)} procesos."
@@ -420,21 +435,45 @@ class InterfazSimulador:
 
     def habilitar_controles(self) -> None:
         self.btn_siguiente.config(state="normal")
-        self.btn_iniciar.config(state="normal")
         self.btn_reiniciar.config(state="normal")
-        self.btn_pausar.config(state="disabled")
 
     def actualizar_vista(self) -> None:
         if self.simulador is None:
             return
         s = self.simulador
-        self.lbl_tiempo.config(text=f"Tiempo: {s.tiempo}")
+
+        if s.tiempo == -1:
+            self.btn_siguiente.config(text="Iniciar")
+        else:
+            self.btn_siguiente.config(text="Siguiente ciclo")
+
+        if s.tiempo == -1:
+            self.lbl_tiempo.config(text="Tiempo: —")
+        else:
+            self.lbl_tiempo.config(text=f"Tiempo: {s.tiempo}")
+
+        if s.procesos_arribados_en_tiempo:
+            arribos = ", ".join(
+                f"P{p.id}" for p in s.procesos_arribados_en_tiempo
+            )
+        else:
+            arribos = "Ninguno"
+
+        self.lbl_arribos.config(text=f"Arribos: {arribos}")
+
+        if s.procesos_finalizados_en_tiempo:
+            finalizados = ", ".join(
+                f"P{p.id}" for p in s.procesos_finalizados_en_tiempo
+            )
+        else:
+            finalizados = "Ninguna"
+
+        self.lbl_finalizados.config(text=f"Finalizaciones: {finalizados}")
 
         listas = {
             "Nuevos": s.listaNuevos,
             "Listos": s.listaListos,
             "Listos y suspendidos": s.listaListosYSuspendidos,
-            "Ejecutando": s.listaEjecutando,
             "Terminados": s.listaTerminados,
         }
         for nombre, procesos in listas.items():
@@ -442,13 +481,11 @@ class InterfazSimulador:
             arbol.delete(*arbol.get_children())
             for p in procesos:
                 restante = p.tiempo_restante if nombre != "Terminados" else "—"
-                arbol.insert("", "end", values=(f"P{p.id}", restante, p.tamanio))
+                arbol.insert("", "end", values=(f"P{p.id}", p.tiempo_arribo, restante, p.tamanio))
 
-        if s.listaEjecutando:
-            p = s.listaEjecutando[0]
-            self.lbl_cpu.config(
-                text=f"P{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}"
-            )
+        if s.cpu is not None:
+            p = s.cpu
+            self.lbl_cpu.config(text=f"P{p.id}  |  Tiempo restante: {p.tiempo_restante}  |  Memoria: {p.tamanio}")
         else:
             self.lbl_cpu.config(text="CPU libre")
 
@@ -465,15 +502,36 @@ class InterfazSimulador:
         )
         self.dibujar_memoria()
 
+
+        self.tabla_particiones.delete(
+            *self.tabla_particiones.get_children()
+        )
+
+        for part in s.listaParticiones:
+            proceso = (
+                f"P{part.proceso_asignado.id}"
+                if part.proceso_asignado is not None
+                else "Libre"
+            )
+
+            self.tabla_particiones.insert(
+                "",
+                "end",
+                values=(
+                    part.id,
+                    part.inicio + 100,
+                    part.tamanio,
+                    proceso
+                )
+            )
+
+
         if s.finalizado:
             self.mostrar_informe()
-            self.btn_siguiente.config(state="disabled")
-            self.btn_iniciar.config(state="disabled")
-            self.btn_pausar.config(state="disabled")
+            self.btn_siguiente.config(state="disabled")            
             self.lbl_estado.config(text="Simulación finalizada.")
         else:
-            self.btn_siguiente.config(state="normal")
-            self.btn_iniciar.config(state="normal")
+            self.btn_siguiente.config(state="normal")            
 
     def dibujar_memoria(self) -> None:
         if self.simulador is None or not hasattr(self, "canvas_memoria"):
@@ -535,46 +593,12 @@ class InterfazSimulador:
             return
         self.simulador.siguiente_ciclo()
         self.actualizar_vista()
-
-    def iniciar(self) -> None:
-        if (
-            self.simulador is None
-            or self.simulador.finalizado
-            or self.after_id is not None
-        ):
-            return
-        self.btn_iniciar.config(state="disabled")
-        self.btn_pausar.config(state="normal")
-        self.btn_siguiente.config(state="disabled")
-        self.ejecutar_automatico()
-
-    def ejecutar_automatico(self) -> None:
-        if self.simulador is None or self.simulador.finalizado:
-            self.pausar()
-            return
-        self.simulador.siguiente_ciclo()
-        self.actualizar_vista()
-        if not self.simulador.finalizado:
-            self.after_id = self.root.after(
-                max(50, int(self.velocidad.get())), self.ejecutar_automatico
-            )
-        else:
-            self.after_id = None
-            self.pausar()
-
-    def pausar(self) -> None:
-        if self.after_id is not None:
-            self.root.after_cancel(self.after_id)
-            self.after_id = None
-        if self.simulador is not None and not self.simulador.finalizado:
-            self.btn_iniciar.config(state="normal")
-            self.btn_siguiente.config(state="normal")
-            self.btn_pausar.config(state="disabled")
+        
+            
 
     def reiniciar(self) -> None:
         if not self.archivo_actual:
             return
-        self.pausar()
         try:
             procesos, errores = cargar_procesos(self.archivo_actual)
             self.simulador = Simulador(procesos)
