@@ -88,39 +88,27 @@ class Simulador:
 
                 mejor_particion.tamanio = proceso.tamanio
                 self.listaListos.append(proceso)
+                self.ordenar_lista_listos()
                 listaAuxiliar.remove(proceso)
             else:
                 if listaAuxiliar is self.listaNuevos:
                     self.listaListosYSuspendidos.append(proceso)
                     listaAuxiliar.remove(proceso)
 
-    def buscar_proceso_menor_tiempo_irrupcion(self) -> None:
-        menor_tiempo = float("inf")
-        indice_menor = -1
 
-        if len(self.listaListos) > 0:
-            for i in range(len(self.listaListos)):
-                if self.listaListos[i].tiempo_restante < menor_tiempo:
-                    menor_tiempo = self.listaListos[i].tiempo_restante
-                    indice_menor = i
-
-            if indice_menor != -1:
-                proceso_menor = self.listaListos.pop(indice_menor)
-                self.listaListos.insert(0, proceso_menor)
+    def ordenar_lista_listos(self) -> None:
+        self.listaListos.sort(key=lambda proceso: proceso.tiempo_restante)
 
     def asignar_procesos_cpu(self):
         if self.cpu is None and len(self.listaListos) > 0:
-            self.buscar_proceso_menor_tiempo_irrupcion()
-            proceso_a_ejecutar = self.listaListos.pop(0)
-            self.cpu = proceso_a_ejecutar
+            self.cpu = self.listaListos.pop(0)
 
         elif self.cpu is not None and len(self.listaListos) > 0:
-            current_proceso = self.cpu
-            self.buscar_proceso_menor_tiempo_irrupcion()
-
-            if self.listaListos[0].tiempo_restante < current_proceso.tiempo_restante:
-                self.listaListos.append(current_proceso)
+            if self.listaListos[0].tiempo_restante < self.cpu.tiempo_restante:
+                self.listaListos.append(self.cpu)
+                self.ordenar_lista_listos()
                 self.cpu = self.listaListos.pop(0)
+
 
     def liberar_particion(self, proceso) -> None:
         for particion in self.listaParticiones:
