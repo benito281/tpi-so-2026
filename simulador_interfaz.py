@@ -209,14 +209,14 @@ def cargar_procesos(ruta) -> tuple[list, list]:
                     f"Fila {numero_fila}: tiempo de arribo negativo; se omitió."
                 )
                 continue
-            if tiempo_irrupcion < 0:
+            if tiempo_irrupcion <= 0:
                 errores.append(
-                    f"Fila {numero_fila}: tiempo de irrupción negativo; se omitió."
+                    f"Fila {numero_fila}: tiempo de irrupción cero o negativo; se omitió."
                 )
                 continue
-            if tamanio < 0 or tamanio > 450:
+            if tamanio <= 0 or tamanio > 450:
                 errores.append(
-                    f"Fila {numero_fila}: tamaño fuera del rango 0-450; se omitió."
+                    f"Fila {numero_fila}: tamaño fuera del rango 1-450; se omitió."
                 )
                 continue
 
