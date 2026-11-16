@@ -168,8 +168,9 @@ class Simulador:
             for proceso in self.listaNuevos
             if proceso.tiempo_arribo == self.tiempo
         ]
-        self.recorrer_lista_particiones_bestFit(self.listaNuevos)
+        
         self.recorrer_lista_particiones_bestFit(self.listaListosYSuspendidos)
+        self.recorrer_lista_particiones_bestFit(self.listaNuevos)        
         self.asignar_procesos_cpu()
 
         if not (
