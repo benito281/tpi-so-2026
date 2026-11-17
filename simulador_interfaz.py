@@ -279,6 +279,13 @@ class InterfazSimulador:
         self.lbl_archivo = ttk.Label(controles, text="Ningún archivo cargado")
         self.lbl_archivo.pack(side="right", padx=5)
 
+        self.lbl_estadisticas = ttk.Label(
+            contenedor,
+            text="Las estadísticas estarán disponibles al finalizar.",
+            font=("Segoe UI", 10, "bold")
+        )
+        self.lbl_estadisticas.pack(anchor="w", pady=(0, 6))
+
         paneles = ttk.Frame(contenedor)
         paneles.pack(fill="both", expand=True)
 
@@ -381,9 +388,7 @@ class InterfazSimulador:
             self.tabla_informe.heading(col, text=titulos_inf[col])
             self.tabla_informe.column(col, width=110, anchor="center")
         self.tabla_informe.pack(fill="x")
-        self.lbl_estadisticas = ttk.Label(
-            informe, text="El informe estará disponible al finalizar."
-        )
+       
         self.lbl_estadisticas.pack(anchor="w", pady=(6, 0))
 
         self.lbl_estado = ttk.Label(
