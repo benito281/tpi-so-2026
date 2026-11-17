@@ -297,7 +297,7 @@ class InterfazSimulador:
 
             columnas = ("id", "arribo", "restante", "memoria")
             arbol = ttk.Treeview(
-                grupo, columns=columnas, show="headings", height=3
+                grupo, columns=columnas, show="headings", height=1
             )
 
             arbol.heading("id", text="Proceso")
