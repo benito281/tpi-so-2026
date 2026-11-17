@@ -241,6 +241,7 @@ class InterfazSimulador:
 
         self.crear_interfaz()
         self.seleccionar_archivo()
+        self.root.state("zoomed")
 
     def crear_interfaz(self) -> None:
         contenedor = ttk.Frame(self.root, padding=12)
@@ -342,7 +343,7 @@ class InterfazSimulador:
         columnas_memoria = ("id", "inicio", "tamanio", "proceso")
 
         self.tabla_particiones = ttk.Treeview(
-            memoria, columns=columnas_memoria, show="headings", height=4
+            memoria, columns=columnas_memoria, show="headings", height=2
         )
 
         self.tabla_particiones.heading("id", text="Partición")
