@@ -305,7 +305,7 @@ class InterfazSimulador:
 
             columnas = ("id", "arribo", "restante", "memoria")
             arbol = ttk.Treeview(
-                grupo, columns=columnas, show="headings", height=1
+                grupo, columns=columnas, show="headings", height=3
             )
 
             arbol.heading("id", text="Proceso")
@@ -350,7 +350,7 @@ class InterfazSimulador:
         columnas_memoria = ("id", "inicio", "tamanio", "proceso")
 
         self.tabla_particiones = ttk.Treeview(
-            memoria, columns=columnas_memoria, show="headings", height=2
+            memoria, columns=columnas_memoria, show="headings", height=4
         )
 
         self.tabla_particiones.heading("id", text="Partición")
@@ -375,7 +375,7 @@ class InterfazSimulador:
         informe.pack(fill="x", pady=(10, 0))
         cols = ("proceso", "arribo", "finalizacion", "retorno", "espera")
         self.tabla_informe = ttk.Treeview(
-            informe, columns=cols, show="headings", height=3
+            informe, columns=cols, show="headings", height=4
         )
         titulos_inf = {
             "proceso": "Proceso",
