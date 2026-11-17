@@ -250,10 +250,10 @@ class InterfazSimulador:
         encabezado.pack(fill="x", pady=(0, 10))
 
         ttk.Label(
-            encabezado, text="SIMULADOR DE PROCESOS", font=("Segoe UI", 17, "bold")
+            encabezado, text="SIMULADOR DE PROCESOS", font=("Segoe UI", 14, "bold")
         ).pack(side="left")
         self.lbl_tiempo = ttk.Label(
-            encabezado, text="Tiempo: —", font=("Segoe UI", 13, "bold")
+            encabezado, text="Tiempo: —", font=("Segoe UI", 11, "bold")
         )
         self.lbl_tiempo.pack(side="right")
 
@@ -367,7 +367,7 @@ class InterfazSimulador:
         informe.pack(fill="x", pady=(10, 0))
         cols = ("proceso", "arribo", "finalizacion", "retorno", "espera")
         self.tabla_informe = ttk.Treeview(
-            informe, columns=cols, show="headings", height=2
+            informe, columns=cols, show="headings", height=3
         )
         titulos_inf = {
             "proceso": "Proceso",
