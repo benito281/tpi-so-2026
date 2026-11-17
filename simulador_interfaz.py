@@ -241,7 +241,7 @@ class InterfazSimulador:
 
         self.crear_interfaz()
         self.seleccionar_archivo()
-        self.root.state("zoomed")
+
 
     def crear_interfaz(self) -> None:
         contenedor = ttk.Frame(self.root, padding=12)
